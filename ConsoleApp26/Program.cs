@@ -1,5 +1,4 @@
 ﻿using Azure.Identity;
-using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

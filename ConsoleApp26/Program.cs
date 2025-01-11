@@ -70,9 +70,29 @@ AgentGroupChat chat = new(AzureAgent, AwsAgent, facilitator)
 {
     ExecutionSettings = new Microsoft.SemanticKernel.Agents.Chat.AgentGroupChatSettings()
     {
+        SelectionStrategy = new KernelFunctionSelectionStrategy(
+            kernel.CreateFunctionFromPrompt($$$"""
+                会話の履歴：{{${{{KernelFunctionTerminationStrategy.DefaultHistoryVariableName}}}}
+
+                # 話す人の候補
+                - {{{facilitator.Name}}} : ファシリテーター
+                - {{{AzureAgent.Name}}} : Azureが大好きな人
+                - {{{AwsAgent.Name}}} : AWSが大好きな人
+
+                # 会話の進行
+                1. {{{facilitator.Name}}}がAzureとAWSの長所を提示して議論します。
+                2. {{{AzureAgent.Name}}}がAzureの長所を提示します。
+                3. {{{AwsAgent.Name}}}がAWSの長所を提示します。
+                4. {{{facilitator.Name}}}がAzureとAWSの長所を比較して議論します。
+
+                """), kernel)
+        {
+            InitialAgent = facilitator,
+            UseInitialAgentAsFallback = true
+        },
         TerminationStrategy = new KernelFunctionTerminationStrategy(terminationFunction, kernel)
         {
-            Agents = [AzureAgent, AwsAgent, facilitator],
+            Agents = [facilitator, AwsAgent, AzureAgent],
             MaximumIterations = 30,
             ResultParser = result => result.GetValue<string>() == "Done"
         }
@@ -81,7 +101,7 @@ AgentGroupChat chat = new(AzureAgent, AwsAgent, facilitator)
 
 ChatHistory history = [];
 chat.AddChatMessage(new ChatMessageContent(AuthorRole.User, """
-    PaaSサービスを比較した上でAzureとAWSのどちらが有利かについて議論してください。
+    .NETアプリケーションをうごかす上で様々な角度からAzureとAWSのどちらが有利かについて議論してください。
     """));
 await foreach (var message in chat.InvokeAsync())
 {
